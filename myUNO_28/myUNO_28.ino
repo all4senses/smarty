@@ -1,6 +1,7 @@
 // Printout like Serial << "text" << data << endl;
 //#include <Streaming.h>
-
+//#include <String.h>
+#include <limits.h>
 
 
 
@@ -17,7 +18,7 @@ extern "C" {
 EasyTransferI2C ET; 
 
 // Main a4s header file that is ued by all afs_arduino projects
-#include <D:/Alex_D/_Apps/_Arduino/_a4s_Projects/a4s_header.h>
+#include <C:/_Alexx/_Work/_Arduino/_a4s_Projects/a4s_header.h>
 
 extern byte const lights_number;
 
@@ -65,7 +66,7 @@ EthernetServer server(80);
 EthernetClient client; //, second_client;
 
 
-#include <D:/Alex_D/_Apps/_Arduino/_a4s_Projects/a4s_secure.h>
+#include <C:/_Alexx/_Work/_Arduino/_a4s_Projects/a4s_secure.h>
 extern char const accessKeyPair[];
 extern char *phones[];
 
@@ -99,19 +100,25 @@ class webServer_class {
   
     public:
           
-              String params_pairs[10];
+              //String params_pairs[10];
+              char* params_pairs[10];
+              
               String HTTP_params;
-              String nextParamArray[2]; // index 0 - key, 1 - value
+              
+              //String nextParamArray[2]; // index 0 - key, 1 - value
+              char* nextParamArray[2]; // index 0 - key, 1 - value
+              
               boolean requestHasParams;
 
-              String taskRequestedStr;
+              //String taskRequestedStr;
+              char* taskRequestedStr;
               
               unsigned long millis_current;
               unsigned long wait_responce_start;
               int wait_responce_timeout; // 30sec 
               
               // Not sure if this works...
-              String queryParamsPatterns[];
+              //String queryParamsPatterns[];
               
               
               
@@ -131,12 +138,13 @@ class webServer_class {
                 Serial.println(Ethernet.localIP());
                 
                 // Not sure if this works...
+                /*
                 String queryParamsPatterns[] = {
                   "led1=1",  // 0
                   "led1=0", // 1
                   "\0",
                 };
-                
+                */
               }
 
 
@@ -203,18 +211,15 @@ class webServer_class {
 
                   webServer_get_HttpGetParams();
 
-                  if (requestHasParams) {
-                    Serial.println("New client...");
-                    Serial.print("Url params: "); Serial.println(HTTP_params);
-                    //Serial << "new client" << endl << "Url query params: " << HTTP_params << endl;
-                  }
-
-
                   webServer_printHtmlHeader(client);
 
                   //if (!strstr(HTTP_params, "access=xxx")) 
-                  if (HTTP_params.indexOf(accessKeyPair) >= 0) {
-                    //Serial.println("Bad access token");
+                  if (requestHasParams && HTTP_params.indexOf(accessKeyPair) >= 0) {
+                    //Serial.println("Accepted, process data...");
+                      
+                    //Serial.println("New client...");
+                    Serial.print("New cl.Params: "); Serial.println(HTTP_params);
+                    //Serial << "new client" << endl << "Url query params: " << HTTP_params << endl;
 
                     //client.respond();
                     //wait_responce_start = 0;
@@ -249,7 +254,7 @@ class webServer_class {
 
 
 
-
+              /*
               int webServer_getQueryParamIndex_fromParamsPatternsArray(String command) {
 
                 int count = 0;
@@ -261,7 +266,7 @@ class webServer_class {
                 while (queryParamsPatterns[count++] != "\0");
                 return -1;
               }
-
+              */
 
 
               void webServer_get_HttpGetParams() {
@@ -352,12 +357,18 @@ class webServer_class {
 
                 char buff[100];
                 strcpy(buff,HTTP_params.c_str());  //присвоение string в char
-
+                
+                //Serial.print("bu: ");
+                //Serial.println(buff);
+                //Serial.println("---");
+                
                 int params_num = -1;
                 char* p = strtok(buff,"&");    //разбитие на лексемы
                 while (p!=0){                    //проверка
                   ++params_num;
                   params_pairs[params_num] = p;     //присвоение в массив новой лексемы до '|'
+                  //Serial.println(params_pairs[params_num]);
+                  //Serial.println("**");
                   p = strtok(NULL,"&");       //переход к следующей
                 }
 
@@ -366,20 +377,31 @@ class webServer_class {
 
 
 
-              int webServer_getNextParamPair(String paramPairStr) {
+              //int webServer_getNextParamPair(String paramPairStr) {
+              int webServer_getNextParamPair(char* buff) {    
 
                 // http://cppstudio.com/post/747/
 
-                char buff[50];
-                //strcpy(buff,str.c_str());  //присвоение string в char
-                strcpy(buff, paramPairStr.c_str());  //присвоение string в char
-
+                //Serial.println(paramPairStr);
+                
+//                char buff[50];
+//                //strcpy(buff,str.c_str());  //присвоение string в char
+//                strcpy(buff, paramPairStr.c_str());  //присвоение string в char
+                
+                
+                
+                //Serial.print("bu: ");
+                //Serial.println(buff);
+                //Serial.println("---");
+                
                 int params_num = -1;
                 //char * p = strtok(buff,"|");    //разбитие на лексемы
                 char* p = strtok(buff,"=");    //разбитие на лексемы
                 while (p!=0){                    //проверка
                   ++params_num;
                   nextParamArray[params_num] = p;        //присвоение в массив новой лексемы до '|'
+                  //Serial.println(nextParamArray[params_num]);
+                  //Serial.println("===");
                   //p = strtok(NULL,"|");       //переход к следующей
                   p = strtok(NULL,"=");       //переход к следующей
                 }
@@ -403,10 +425,13 @@ class webServer_class {
 
                 byte params_num = webServer_getParamsPairs();
 
-              //  Serial.print("params_num: ");
-              //  Serial.println(params_num);
+                //Serial.print("params_num: ");
+                //Serial.println(params_num);
 
                 if (!params_num) {
+                  Serial.print("noParams");
+                  wait_responce_start = 0;
+                  client.print("myJsonMethod({\"params\":\"empty\"})");
                   return;
                 }
 
@@ -420,17 +445,31 @@ class webServer_class {
 
                   if (hasNextParam) {
                     //Serial << "[0] = " << nextParamArray[0] << ", nextParamArray[1] = " << nextParamArray[1] << endl;
-              //        Serial.print("[0] = ");
-              //        Serial.print(nextParamArray[0]);
-              //        Serial.print(", nextParamArray[1] = ");
-              //        Serial.println(nextParamArray[1]);
+//                      Serial.print("nexP[0]=");
+//                      Serial.print(nextParamArray[0]);
+//                      Serial.print(",nexP[1]=");
+//                      Serial.println(nextParamArray[1]);
 
-                    if (nextParamArray[0] == "op") {
-                      op = nextParamArray[1].toInt();
+                    if (strcmp(nextParamArray[0], "op") == 0) {  
+                    //if (nextParamArray[0] == "op") {
+                      
+                      //op = nextParamArray[1].toInt();
+                      //op = (int) nextParamArray[1];
+                      op = atoi(nextParamArray[1]);
+                      //Serial.print("op:");
+                      //Serial.println(op);
+                      
                       //Serial << "op = " << op << endl;
                     }
-                    else if (nextParamArray[0] == "target_1") {
-                      target_1 = nextParamArray[1].toInt();
+                    //else if (nextParamArray[0] == "target_1") {
+                    else if (strcmp(nextParamArray[0], "target_1") == 0) {      
+                      
+                      //target_1 = nextParamArray[1].toInt();
+                      //target_1 = (int) nextParamArray[1];
+                      target_1 = atoi(nextParamArray[1]);
+                      //Serial.print("targ1:");
+                      //Serial.println(target_1);
+                      
                       if (target_1 < 0 || target_1 > 17) {
                         target_1 = 99;
                       }
@@ -458,20 +497,27 @@ class webServer_class {
                 if ( (op == I2C_OP_LAMP_READ || op == I2C_OP_LAMP_ON || op == I2C_OP_LAMP_OFF || op == I2C_OP_LAMP_SWITCH) && target_1 >= 0) {
                   // Oparate lights on MEGA
 
-                  taskRequestedStr = taskRequestedStr + op + " for lamp " + target_1;  
+                  //taskRequestedStr = taskRequestedStr + op + " for lamp " + target_1;  
+                    
+                  sprintf(taskRequestedStr, "op %d for lamp %d", op, target_1);
+                  
 
+                  Serial.print("taskRequestedStr = ");
+                  Serial.println(taskRequestedStr);  
+                  
                   // Set sending data
                   data_transfer.from = I2C_UNO_ADDRESS;
                   data_transfer.to = I2C_MEGA_ADDRESS;
                   //strcpy(data_transfer.op, op.c_str());
                   data_transfer.op = op;
                   data_transfer.target_1 = target_1;
+                  data_transfer.target_2 = -1;// This is just in case... if it's not set here, it's treated as 0 and would set a lamp #0 along with the target_1 lamp (with the same state))
                   data_transfer.wait_responce = true;
 
                   //Serial << "Sending: data_transfer.to = " << data_transfer.to << ", data_transfer.target_1= " << target_1 << ", data_transfer.op = " << data_transfer.op << endl;
                   Serial.print("Sending: data_transfer.to = ");
                   Serial.print(data_transfer.to);  
-                  Serial.print(", data_transfer.target_1= ");
+                  Serial.print(", data_transfer.target_1 = ");
                   Serial.print(target_1);  
                   Serial.print(", data_transfer.op = ");
                   Serial.println(data_transfer.op);  
@@ -495,8 +541,10 @@ class webServer_class {
                 else if ( (op == I2C_OP_CALL_PHONE || op == I2C_OP_CALL_HANGUP) ) {
                   // Call to phone on GBOARD
 
-                  taskRequestedStr = taskRequestedStr + op;  
-
+                  //taskRequestedStr = taskRequestedStr + op;  
+                  //strcat(taskRequestedStr, op);
+                  sprintf(taskRequestedStr, "op call %d for phone %d", op, target_1);
+                  
                   // Set sending data
                   data_transfer.to = I2C_GBOARD_ADDRESS;
                   //strcpy(data_transfer.op, op.c_str());

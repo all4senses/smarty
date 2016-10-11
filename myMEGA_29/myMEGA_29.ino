@@ -92,10 +92,10 @@ LiquidCrystal_I2C lcd(0x27,16,2);  // set the LCD address to 0x27 for a 16 chars
 
 
 // Main a4s header file that is ued by all afs_arduino projects
-#include <D:/Alex_D/_Apps/_Arduino/_a4s_Projects/a4s_header.h>
+#include <C:/_Alexx/_Work/_Arduino/_a4s_Projects/a4s_header.h>
 extern byte const lights_number;
 
-#include <D:/Alex_D/_Apps/_Arduino/_a4s_Projects/a4s_secure.h>
+#include <C:/_Alexx/_Work/_Arduino/_a4s_Projects/a4s_secure.h>
 extern char *phones[];
 
 
@@ -232,13 +232,13 @@ typedef struct{
 
 byte const rtc_alarms_amount = 4;
 RTC_CUSTOM_ALARM_STRUCTURE rtc_custom_alarms[rtc_alarms_amount] = {
-                                                    {16, 41, 1, true, "Zal1", 0, {14, 12, 99}, {0,1,0}}, // 99 for not set
-                                                    {16, 43, 2, true, "ZalSwit2", 0, {14, 12, 99}, {1,0,0}}, // 99 for not set
+                                                    //{16, 41, 1, true, "Zal1", 0, {14, 12, 99}, {0,1,0}}, // 99 for not set
+                                                    //{16, 43, 2, true, "ZalSwit2", 0, {14, 12, 99}, {1,0,0}}, // 99 for not set
                                                     
                                                     // 4 - Спальня, подвесы, 7 - Детская, над столом, 13 - Kitchen Posvetka
-                                                    ////{6, 53, 3, true, "SpalDet1", 0, {4, 7, 13}, {1,1,1}}, // 99 for not set
+                                                    {6, 53, 3, true, "SpalDet1", 0, {4, 7, 13}, {1,1,1}}, // 99 for not set
                                                     // 9 - Детская, точки, 7 - Детская, над столом, 1 - Spalnia Neon
-                                                    ////{7, 0, 4, true, "Detsk2", 0, {9, 7, 1}, {1,0,1}}, // 99 for not set
+                                                    {7, 0, 4, true, "Detsk2", 0, {9, 7, 1}, {1,0,1}}, // 99 for not set
                                                   };
 
 
@@ -259,7 +259,7 @@ working as they should.
 
 */
 #include <DS3231.h>
-//#include <D:/Alex_D/_Apps/_Arduino/arduino-1.0.5-r2/libraries/DS3231/DS3231.h>
+//#include <C:/_Alexx/_Work/_Arduino/arduino-1.0.5-r2/libraries/DS3231/DS3231.h>
 
 //DS3231 Clock;
 
@@ -2079,6 +2079,8 @@ class easyVR_class {
 
 
 // UltraSonic sensor class
+// Working, but Not used for now
+/*
 class ultraS_class {
   
     public:
@@ -2263,7 +2265,7 @@ class ultraS_class {
   
 } ultraS_obj;
 
-
+*/
 
 
 
@@ -3108,7 +3110,7 @@ void setup() {
   ///rtc_obj.rtc_setup(20000); // 20000 period of checking the time
   
   rtc_obj.rtc_setup(); // 20000 period of checking the time
-  ///////---->rtc_alarm_obj.rtc_alarm_setup(20000); // 20000 period of checking the time
+  rtc_alarm_obj.rtc_alarm_setup(20000); // 20000 period of checking the time
   
   //easyVR_obj.easyVR_setup();
   
@@ -3116,7 +3118,7 @@ void setup() {
   //ultraS_obj.ultraS_setup();  //ultraS_obj.ultraS_setup(byte trigger_pin, byte echo_pin, byte trigger_distance, byte testLed = 13)
   
 
-  ///////---->lightOff_process_functions_class::lightOff_data_setup();
+  lightOff_process_functions_class::lightOff_data_setup();
   
   ////eeprom_test();
   ///////---->rtc_obj.rtc_eeprom_read();
@@ -3152,7 +3154,7 @@ void loop() {
   
   et_obj.et_receiving_process(); 
   
-  ///////---->rtc_alarm_obj.rtc_alarm_process(rtc_obj);
+  rtc_alarm_obj.rtc_alarm_process(rtc_obj);
   
   ir_obj.ir_process();
   
@@ -3164,9 +3166,9 @@ void loop() {
   
   
   
-  ///////---->lightOff_process_functions_class::lightOff_data_process();
+  lightOff_process_functions_class::lightOff_data_process();
   
-  lcd_obj.processClockTicTac();
+  //lcd_obj.processClockTicTac();
   
   
   ////printLine(1);

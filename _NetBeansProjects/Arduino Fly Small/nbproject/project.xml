@@ -4,14 +4,16 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
             <name>Arduino Fly Small</name>
-            <c-extensions>c</c-extensions>
-            <cpp-extensions>cpp,ino,pde</cpp-extensions>
+            <c-extensions/>
+            <cpp-extensions>cpp,ino</cpp-extensions>
             <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
                 <sourceRootElem>D:/Alex_D/_Apps/_Arduino/_a4s_Projects</sourceRootElem>
                 <sourceRootElem>D:/Alex_D/_Apps/_Arduino/arduino-1.0.5-r2</sourceRootElem>
+                <sourceRootElem>../..</sourceRootElem>
+                <sourceRootElem>../../../_Apps/arduino-1.0.5-r2</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>
