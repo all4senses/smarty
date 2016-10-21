@@ -6,7 +6,7 @@
 // http://www.cplusplus.com/reference/cstdio/printf/        
 // http://en.cppreference.com/w/cpp/io/c/fprintf
 
-#define PRINT_SERIAL 1
+#define PRINT_SERIAL 0
 #define BUFF_MAX 100
 //char buff[BUFF_MAX];
 /*
@@ -218,7 +218,7 @@ byte lights_to_pins[lights_number][2] = {
 typedef struct{
   uint8_t a_hour;
   uint8_t a_minute;
-  byte a_num;
+  byte a_num; // Day(s) of week OR predefined const for deveral days like ALARM_DAY_WEEKDAYS, look at a4s_header.h, //In Arduino sun - sat => 0 - 6
   boolean active;
   char name[10];
   byte target_type; // 0 - lamp
@@ -236,9 +236,12 @@ RTC_CUSTOM_ALARM_STRUCTURE rtc_custom_alarms[rtc_alarms_amount] = {
                                                     //{16, 43, 2, true, "ZalSwit2", 0, {14, 12, 99}, {1,0,0}}, // 99 for not set
                                                     
                                                     // 4 - Спальня, подвесы, 7 - Детская, над столом, 13 - Kitchen Posvetka
-                                                    {6, 53, 3, true, "SpalDet1", 0, {4, 7, 13}, {1,1,1}}, // 99 for not set
+                                                    /////{6, 53, 3, true, "SpalDet1", 0, {4, 7, 13}, {1,1,1}}, // 99 for not set
+                                                    {6, 53, ALARM_DAY_WEEKDAYS, true, "SpalDet1", 0, {4, 7, 13}, {1,1,1}}, // 99 for not set
+                                                    
                                                     // 9 - Детская, точки, 7 - Детская, над столом, 1 - Spalnia Neon
-                                                    {7, 0, 4, true, "Detsk2", 0, {9, 7, 1}, {1,0,1}}, // 99 for not set
+                                                    //////{7, 10, 4, true, "Detsk2", 0, {4, 7, 13}, {0,0,0}}, // 99 for not set
+                                                    {7, 10, ALARM_DAY_WEEKDAYS, true, "Detsk2", 0, {4, 7, 13}, {0,0,0}}, // 99 for not set
                                                   };
 
 
@@ -535,10 +538,12 @@ class lcd_class {
         uint32_t current_millis;
         unsigned long lastCheckTime;
         long switchPeriod; // = 35;  // period of the test led switching, ms.
-              
+        boolean backilight_state; 
+        
         void lcd_setup() {
           switchPeriod = 60000; // 1 min
           lastCheckTime = 0;
+          backilight_state = false;
           Serial.println("TicTac started...");
                 
           // Initialize the lcd 
@@ -553,15 +558,45 @@ class lcd_class {
           lcd_printDateTimeTemperature();
         }
         
+        
+        void backlight_set(boolean state) {
+          lcd_printDateTimeTemperature();
+          backilight_state = state;
+          if (state) {
+            lcd.backlight();
+          }
+          else {
+           lcd.noBacklight(); 
+          } 
+        }
+        
+        void backlight_switch() {
+            backilight_state = !backilight_state;
+            backlight_set(backilight_state);
+        }
+        
+        
+        /*
+        void backlight(boolean state) {
+          backlight_set(state);
+          if (state) {
+           lcd_printDateTimeTemperature();
+          }
+        }
+        */
+        
+        /*
         void backlight(boolean state) {
           if (state) {
            lcd_printDateTimeTemperature();
-           lcd.backlight();  
+           lcd.backlight();
+           
           }
           else {
            lcd.noBacklight(); 
           }
         }
+        */
         
         void lcd_printDateTimeTemperature() {
           //return;
@@ -860,7 +895,7 @@ class light_class {
                             //finalLampState = false;
                             // If it's Koridos tochki off - turn off LCD backlight
                             if (lamp_num == 5) {
-                              lcd_obj.backlight(false);
+                              lcd_obj.backlight_set(false);
                             }
                             else {
                               if (PRINT_SERIAL) {
@@ -873,7 +908,7 @@ class light_class {
                             //finalLampState = true;
                             // If it's Koridos tochki on - turn on LCD backlight
                             if (lamp_num == 5) {
-                              lcd_obj.backlight(true);
+                              lcd_obj.backlight_set(true);
                             }
                             else {
                               if (PRINT_SERIAL) {
@@ -1083,12 +1118,28 @@ class et_class {
 
 //IRrecv irrecv(IR_RECV_PIN);
 
+
+
+
+// https://github.com/z3t0/Arduino-IRremote
+// http://www.dx.com/p/940-3mm-ir-emitter-led-10m-10-piece-pack-124841?sourceSKU=154184#.WAqUCI-LTRF
+                            
+// Works, Pin: D9 !!!
+
+//Works, transmitter on D9!
+//int khz = 38; // 38kHz carrier frequency for the NEC protocol
+//unsigned int irSignal[] = {9000, 4500, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 39416, 9000, 2210, 560}; //AnalysIR Batch Export (IRremote) - RAW
+                            
+// Real Reciever pins
+// Type: big, SM0038
+// front (to relief) view, legs down: - + S
+
 class ir_class {
   
         public:
 
-                
-                //IRsend irsend;
+                // Works, Pin: D9 !!!
+                IRsend irsend;
 
                 decode_results ir_results;
                 
@@ -1241,6 +1292,17 @@ class ir_class {
                   char buff_local[BUFF_MAX];
                   ir_codeType = ir_results->decode_type;
                   int count = ir_results->rawlen;
+                  
+                  Serial.print("Code type: ");Serial.println(ir_results->decode_type);
+                  Serial.print("Code address: ");Serial.println(ir_results->address);
+                  Serial.print("Code value: ");Serial.println(ir_results->value);
+                  Serial.print("Code bits: ");Serial.println(ir_results->bits);
+                  //Serial.print("Code rawbuf: ");Serial.println(ir_results->rawbuf);
+                  Serial.print("Code rawlen: ");Serial.println(ir_results->rawlen);
+                  Serial.print("Code overflow: ");Serial.println(ir_results->overflow);
+                  Serial.println("--------------------------------");
+                  Serial.println("--------------------------------");
+                  Serial.println("--------------------------------");
                   
                   if (ir_codeType == UNKNOWN) {
                     //Serial.println("Received unknown code, saving as raw");
@@ -1456,7 +1518,56 @@ class ir_class {
                           
                           break;
                           
+                        
                           
+                          
+                        case  1632082533: //Segate mute
+                            // Switch LCD backlight
+                            lcd_obj.backlight_switch();
+                            break;
+
+                            
+                        /*    
+                        case  1632062643: //Segate Volume +
+                            break;    
+                            
+                        case  1632095283: //Segate Volume -
+                            break;    
+                            
+                        case  1632087123: //Segate Zoom +
+                            break;    
+                        */    
+                        case  1632047343: //Segate Zoom -
+                            
+                            //
+                            Serial.println("Sending to LG...");
+                            
+                            // https://github.com/z3t0/Arduino-IRremote
+                            // http://www.dx.com/p/940-3mm-ir-emitter-led-10m-10-piece-pack-124841?sourceSKU=154184#.WAqUCI-LTRF
+                            
+                            // Works, Pin: D9 !!!
+                            irsend.sendLG(551485695, 32); 
+                            
+                            // Works, Pin: D9
+                            //irsend.sendLG(0x20DF10EF, 32); 
+                            
+                            //Works, Pin: D9
+                            //int khz = 38; // 38kHz carrier frequency for the NEC protocol
+                            //unsigned int irSignal[] = {9000, 4500, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 560, 560, 560, 560, 560, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 560, 560, 1690, 560, 1690, 560, 1690, 560, 1690, 560, 39416, 9000, 2210, 560}; //AnalysIR Batch Export (IRremote) - RAW
+                            //irsend.sendRaw(irSignal, sizeof(irSignal) / sizeof(irSignal[0]), khz); //Note the approach used to automatically calculate the size of the array.
+
+                            break;        
+                        
+                          
+                            
+//                        case 551485695: // LG Channel/Page Up
+//                            break;
+                            
+//                        case 551518335: // LG Channel/Page Down
+//                            
+//                            break;    
+                            
+                            
                         case 551505585: // LG Teletext Red
                         case 551521905: // LG Teletext Green
                         case 551487735: // LG 0
@@ -1471,9 +1582,10 @@ class ir_class {
                         case 551524455: // LG 9  
   
                           //light_obj.lightState(2, 4); // Switch koridor vozle vanny
-                          ////Serial.println("Key: LG AUTO BLOCK");
+                          //Serial.println("ir:LGgAutoBlock");
+                            
                           if (PRINT_SERIAL) {
-                            snprintf(buff_local, BUFF_MAX, "Key: LG AUTO BLOCK");
+                            snprintf(buff_local, BUFF_MAX, "ir:LGgAutoBlock");
                             misc_obj.print(buff_local);
                           }
                           
@@ -1483,9 +1595,10 @@ class ir_class {
                           
                           
                         default:
-                          ////Serial.print("Key Other, code: "); Serial.println(ir_results->value);
-                          if (PRINT_SERIAL) {
-                            snprintf(buff_local, BUFF_MAX, "Key Other, code: %d", ir_results->value);
+                          //Serial.print("irOth:"); Serial.println(ir_results->value);
+                          //if (PRINT_SERIAL) 
+                          {
+                            snprintf(buff_local, BUFF_MAX, "irOth:%ld", ir_results->value);
                             misc_obj.print(buff_local);
                           }
                           
@@ -1576,7 +1689,8 @@ class ir_class {
                     delay(50); // Wait a bit between retransmissions
                   } 
                   else
-                 */ 
+                 */
+                    
                   if (irrecv->decode(&ir_results)) {
                     
                     //digitalWrite(STATUS_PIN, HIGH);
@@ -2992,6 +3106,7 @@ class rtc_alarm_class {
 
               char buff_local[BUFF_MAX];
               current_millis = millis();
+              int now_day;
 
               // Check alarms onec in a while, in a predefined periods...
               //if (current_millis - millisTimes[MILLIS_TIME_RTC_CHECK_INDEX] > millisTimeouts[MILLIS_TIME_RTC_CHECK_INDEX]) {
@@ -3002,11 +3117,26 @@ class rtc_alarm_class {
                 lastCheckTime = current_millis;
 
                 DateTime now = rtc_obj.rtc.now();
-
+                now_day = now.dayOfWeek(); //In Arduino sun - sat => 0 - 6
+                //Serial.print("ToDAY: "); Serial.println(now_day);
+                
                 // Check alarms preset and fire active for the current time.
                 for (int i = 0; i <= rtc_alarms_amount - 1; i++) {
 
                   if (rtc_custom_alarms[i].active == true && now.hour() == rtc_custom_alarms[i].a_hour && now.minute() == rtc_custom_alarms[i].a_minute ) {
+                    
+                    if (rtc_custom_alarms[i].a_num != now_day) {
+                        if (rtc_custom_alarms[i].a_num != ALARM_DAY_ALLWEEK) {
+                            if (!(rtc_custom_alarms[i].a_num == ALARM_DAY_WEEKDAYS && now_day >= 1 && now_day < 6)) {
+                                if (!(rtc_custom_alarms[i].a_num == ALARM_DAY_WEEKDAYS_EXT && now_day >= 1 && now_day < 7)) {
+                                    if (!(rtc_custom_alarms[i].a_num == ALARM_DAY_WEEKEND && (now_day == 6 || now_day == 0) )) {
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                      
                     rtc_custom_alarms[i].active = false; // Stop alarm firing for future.
 
             //        I2C_OP_LAMP_READ = 1,
@@ -3032,6 +3162,12 @@ class rtc_alarm_class {
                     }
                     
                   } // End of if (rtc_custom_alarms[i].active == true && now.hour() >= rtc_custom_alarms[i].a_hour && now.minute() >= rtc_custom_alarms[i].a_minute) {
+                  else {
+                      // Turn on alarm again after it has fired,so it could fire next day
+                      // Notice: it's for repeatinfg alarms (every day, every week day, etc))
+                      // TODO: For future, when it will be set to a specific date, sungle firing, it should be reviewed!!!
+                      rtc_custom_alarms[i].active = true; 
+                  }
 
                 } // End of for (int i = 0; i <= rtc_alarms_amount - 1; i++)
 

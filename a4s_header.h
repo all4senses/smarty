@@ -37,7 +37,13 @@ enum {
   I2C_OP_LAMP_OFF_IF_SECOND_ON = 12,
 };
 
-
+enum {
+  //In Arduino sun - sat => 0 - 6
+  ALARM_DAY_ALLWEEK = 7, // mon - sun
+  ALARM_DAY_WEEKDAYS = 8, // mon - fri
+  ALARM_DAY_WEEKDAYS_EXT = 9,// week days + saturday
+  ALARM_DAY_WEEKEND = 10, // sat + sun
+};
 
 
 
